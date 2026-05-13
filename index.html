@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Horse Hosting</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Special+Elite&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:       #0e0d0b;
+      --surface:  #141210;
+      --card:     #181614;
+      --border:   #2a2620;
+      --accent:   #c8b89a;
+      --dim:      #6b6257;
+      --text:     #d4cdc4;
+      --muted:    #4a4540;
+      --pale:     #e8e0d4;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Film grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 180px 180px;
+      opacity: .045;
+      pointer-events: none;
+      z-index: 999;
+      mix-blend-mode: overlay;
+    }
+
+    /* ── Vignette ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.7) 100%);
+      pointer-events: none;
+      z-index: 998;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 3.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(14,13,11,.88);
+      backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      font-family: 'Special Elite', monospace;
+      font-size: 1.1rem;
+      letter-spacing: .18em;
+      color: var(--accent);
+      text-transform: uppercase;
+      opacity: .9;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--dim);
+      font-size: .78rem;
+      font-weight: 300;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      transition: color .3s;
+      font-family: 'Special Elite', monospace;
+    }
+    nav a:hover { color: var(--accent); }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3.5rem 2.5rem 6rem;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-family: 'Special Elite', monospace;
+      font-size: .65rem;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 320px;
+    }
+    .search-icon {
+      position: absolute;
+      left: .9rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    #searchInput {
+      width: 100%;
+      padding: .6rem 1rem .6rem 2.3rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-style: italic;
+      outline: none;
+      transition: border-color .3s;
+    }
+    #searchInput:focus { border-color: var(--dim); }
+    #searchInput::placeholder { color: var(--muted); font-style: italic; }
+
+    .filter-group { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .filter-btn {
+      padding: .48rem .95rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Special Elite', monospace;
+      font-size: .6rem;
+      letter-spacing: .15em;
+      cursor: pointer;
+      transition: all .22s;
+      text-transform: uppercase;
+    }
+    .filter-btn:hover { border-color: var(--dim); color: var(--text); }
+    .filter-btn.active {
+      background: rgba(200,184,154,.07);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sort-select {
+      padding: .48rem .9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Special Elite', monospace;
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      outline: none;
+      margin-left: auto;
+    }
+
+    /* ── GAME GRID ── */
+    #gameGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+      gap: 1.2rem;
+    }
+
+    /* ── GAME CARD ── */
+    .game-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      transition: border-color .35s, transform .35s;
+      animation: cardIn .5s both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .game-card:hover { border-color: var(--dim); transform: translateY(-3px); }
+
+    .card-img-wrap {
+      position: relative;
+      overflow: hidden;
+      height: 165px;
+    }
+    .card-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: grayscale(55%) brightness(.6) contrast(1.1);
+      transition: filter .5s, transform .5s;
+    }
+    .game-card:hover .card-img-wrap img {
+      filter: grayscale(25%) brightness(.78) contrast(1.05);
+      transform: scale(1.04);
+    }
+
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(14,13,11,.92) 0%, transparent 55%);
+      display: flex;
+      align-items: flex-end;
+      padding: .75rem;
+      opacity: 0;
+      transition: opacity .35s;
+    }
+    .game-card:hover .card-overlay { opacity: 1; }
+
+    .overlay-play {
+      width: 34px; height: 34px;
+      border: 1px solid var(--dim);
+      display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+      background: rgba(14,13,11,.6);
+    }
+    .overlay-play svg { width: 13px; height: 13px; fill: var(--accent); margin-left: 1px; }
+
+    .card-body {
+      padding: 1.1rem 1.3rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: .42rem;
+      flex: 1;
+    }
+    .card-genre {
+      font-family: 'Special Elite', monospace;
+      font-size: .58rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.18rem;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--pale);
+      line-height: 1.3;
+    }
+    .card-desc {
+      font-size: .9rem;
+      font-weight: 300;
+      color: var(--dim);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .card-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      margin-top: .9rem;
+      padding: .45rem .95rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      font-family: 'Special Elite', monospace;
+      font-size: .58rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all .25s;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+    .card-play-btn:hover { border-color: var(--dim); color: var(--accent); }
+
+    /* ── EMPTY ── */
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: .3; }
+    .empty-state h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-style: italic;
+      color: var(--dim);
+      margin-bottom: .4rem;
+    }
+    .empty-state p { font-size: .9rem; font-style: italic; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: .85rem 1.3rem;
+      font-family: 'Special Elite', monospace;
+      font-size: .68rem;
+      letter-spacing: .1em;
+      color: var(--dim);
+      z-index: 200;
+      transform: translateY(120%);
+      transition: transform .4s cubic-bezier(.175,.885,.32,1.275);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      max-width: 300px;
+    }
+    #toast.show { transform: translateY(0); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2.2rem;
+      font-family: 'Special Elite', monospace;
+      font-size: .65rem;
+      letter-spacing: .18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      opacity: .75;
+      transition: opacity .2s;
+    }
+    footer a:hover { opacity: 1; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 760px) {
+      header { padding: 1.1rem 1.4rem; }
+      .featured-card { grid-template-columns: 1fr; }
+      .featured-body { border-left: none; border-top: 1px solid var(--border); }
+      .hero h1 { font-size: clamp(2.4rem, 12vw, 5rem); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Horse Hosting</div>
+  <nav>
+    <a href="#games">Games</a>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" id="games">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input id="searchInput" type="text" placeholder="search for something…"/>
+    </div>
+    <div class="filter-group" id="filterGroup"></div>
+    <select class="sort-select" id="sortSelect">
+      <option value="default">Order: Default</option>
+      <option value="name">Order: A–Z</option>
+    </select>
+  </div>
+
+  <div class="section-label">All Games <em id="countLabel" style="font-style:normal;color:var(--muted);font-family:'Special Elite',monospace;font-size:.62rem;letter-spacing:.2em;"></em></div>
+  <div id="gameGrid"></div>
+</main>
+
+<footer>
+  Games ported by <a href="https://gn-math.dev" target="_blank" rel="noopener">gn-math.dev</a>
+</footer>
+
+<!-- Toast -->
+<div id="toast">
+  <span>▸</span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  GAME DATA  (JSON)
+// ─────────────────────────────────────────────
+const gamesData = {
+games: [
+    {
+      id: 1,
+      name: "Milk Inside a Bag of Milk Inside a Bag of Milk",
+      genre: "Visual Novel",
+      description: "A short story about a girl who cannot buy milk without your help. A window into a mind that processes the world differently.",
+      image: "/files/inside.png",
+      link: "/files/inside.html"
+    },
+    {
+      id: 2,
+      name: "Milk Outside a Bag of Milk Outside a Bag of Milk",
+      genre: "Visual Novel",
+      description: "The night continues. She stands outside the store again. The world is louder than it should be, and you are the only one listening.",
+      image: "/files/outside.png",
+      link: "/files/outside.html"
+    },
+    {
+      id: 3,
+      name: "Omori",
+      genre: "RPG",
+      description: "A boy lives in a world of his own making. Beneath the white space, something buried waits. Tread carefully — some doors cannot be closed again.",
+      image: "/files/omori.png",
+      link: "/files/omori.html"
+    },
+    {
+      id: 4,
+      name: "Yume Nikki",
+      genre: "Exploration",
+      description: "Madotsuki refuses to go outside. In her dreams, however, there are endless worlds to wander — strange, wordless, and deeply alone.",
+      image: "/files/yume.png",
+      link: "/files/yume.html"
+    },
+    {
+      id: 5,
+      name: "Fear & Hunger",
+      genre: "RPG",
+      description: "Deep beneath the earth lies a dungeon that has swallowed armies. Four strangers descend into it. Survival is not guaranteed. Sanity is not either.",
+      image: "/files/fah.png",
+      link: "/files/fah.html"
+    },
+    {
+      id: 6,
+      name: "Fear & Hunger 2: Termina",
+      genre: "RPG",
+      description: "A festival at the end of the world. Strangers are gathered in a dying city and told to play a game with no good endings. The god of the old cycle is watching.",
+      image: "/files/faht.png",
+      link: "/files/faht.html"
+    },
+    {
+      id: 7,
+      name: "Iron Lung",
+      genre: "Horror",
+      description: "The stars are gone. You are alone in a submarine in a sea of blood on a moon no one intended to visit. Do not think about what is outside.",
+      image: "/files/ironlung.png",
+      link: "/files/ironlung.html"
+    },
+    {
+      id: 8,
+      name: "Overburden",
+      genre: "Strategy",
+      description: "A city management game about carrying more than you can bear. Expand, decide, and watch the weight of every choice accumulate.",
+      image: "/files/overburden.png",
+      link: "/files/overburden.html"
+    },
+    {
+      id: 9,
+      name: "Buckshot Roulette",
+      genre: "Horror",
+      description: "Sit across from the dealer. Load the shotgun. The house rules are simple — but the house always knows something you do not.",
+      image: "/files/buckshot.png",
+      link: "/files/buckshot.html"
+    },
+    {
+      id: 10,
+      name: "Needy Streamer Overload",
+      genre: "Visual Novel",
+      description: "Manage the life and mental health of an internet-addicted girl chasing viral fame. Every choice pulls her further from the person she was.",
+      image: "/files/nso.png",
+      link: "/files/nso.html"
+    }
+  ]
+};
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let activeFilter = 'all';
+let searchQuery  = '';
+let sortMode     = 'default';
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+function init() {
+  buildFilters();
+  renderGrid();
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value.toLowerCase();
+    renderGrid();
+  });
+
+  document.getElementById('sortSelect').addEventListener('change', e => {
+    sortMode = e.target.value;
+    renderGrid();
+  });
+
+  document.getElementById('filterGroup').addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderGrid();
+  });
+}
+
+// ─────────────────────────────────────────────
+//  FILTERS
+// ─────────────────────────────────────────────
+function buildFilters() {
+  const genres = ['all', ...new Set(gamesData.games.map(g => g.genre))];
+  document.getElementById('filterGroup').innerHTML = genres.map(g =>
+    `<button class="filter-btn${g==='all'?' active':''}" data-filter="${g}">${g === 'all' ? 'All' : g}</button>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  GRID
+// ─────────────────────────────────────────────
+function renderGrid() {
+  let games = [...gamesData.games];
+
+  if (activeFilter !== 'all') games = games.filter(g => g.genre === activeFilter);
+
+  if (searchQuery) games = games.filter(g =>
+    g.name.toLowerCase().includes(searchQuery) ||
+    g.genre.toLowerCase().includes(searchQuery) ||
+    g.description.toLowerCase().includes(searchQuery)
+  );
+
+  if (sortMode === 'name') games.sort((a, b) => a.name.localeCompare(b.name));
+
+  document.getElementById('countLabel').textContent = `— ${games.length}`;
+
+  const grid = document.getElementById('gameGrid');
+  if (!games.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">◻</div>
+        <h3>nothing here</h3>
+        <p>try a different search, or sit with the silence for a moment.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = games.map((g, i) => `
+    <a class="game-card" href="${g.link}" target="_blank" rel="noopener"
+       style="animation-delay:${i * 0.055}s"
+       onclick="onCardClick(event, '${g.name.replace(/'/g, "\\'")}')">
+      <div class="card-img-wrap">
+        <img src="${g.image}" alt="${g.name}" loading="lazy"/>
+        <div class="card-overlay">
+          <div class="overlay-play">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-genre">${g.genre}</div>
+        <div class="card-title">${g.name}</div>
+        <div class="card-desc">${g.description}</div>
+        <span class="card-play-btn">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Open Game
+        </span>
+      </div>
+    </a>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function onCardClick(e, name) {
+  showToast(`opening — ${name}`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
